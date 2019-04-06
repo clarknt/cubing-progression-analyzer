@@ -1,7 +1,11 @@
 from enum import Enum, unique
 
 @unique
-class EventsId(Enum):
+class EventId(Enum):
+    """
+    Supported WCA events
+    """
+
     # 3x3x3 Cube
     E_333 = '333'
 
@@ -24,7 +28,8 @@ class EventsId(Enum):
     E_333_BF = '333bf'
 
     # 3x3x3 Fewest Moves
-    E_333_FM = '333fm'
+    # Not supported
+    #E_333_FM = '333fm'
 
     # 3x3x3 One-Handed
     E_333_OH = '333oh'
