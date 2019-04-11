@@ -2,3 +2,4 @@ mysqlclient
 pandas
 matplotlib
 SQLAlchemy
+pytest

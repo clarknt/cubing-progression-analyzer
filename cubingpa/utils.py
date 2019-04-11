@@ -60,7 +60,7 @@ def interpolate_dates(dataframe):
 
 def convert_date_index_to_timedelta(dataframe):
     """
-    Considering a dataframe with dates as an index, sorted in ascending date order, with a 1-day frequency
+    Considering a dataframe with dates as an index, sorted in ascending date order, with a 1-day frequency,
     convert the date index to a timedelta index in days
 
     Parameters
