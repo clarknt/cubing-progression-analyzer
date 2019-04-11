@@ -35,6 +35,5 @@ def _get_raw_competitions(db_engine):
     # read the whole table without SQL filtering
     # pandas filtering is faster, and it allows reusing the same mechanisms for csv input
     competitions_query = "SELECT id, YEAR, MONTH, DAY FROM Competitions"
-    competitions = pd.read_sql_query(competitions_query, db_engine)
     
-    return competitions
+    return pd.read_sql_query(competitions_query, db_engine)
