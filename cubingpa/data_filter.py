@@ -20,34 +20,50 @@ def filter(raw_data, event_id):
     Dataframe
         Filtered data as a Dataframe
     """
-    return _filter_raw_dataframes(raw_data.results, raw_data.competitions, event_id)
+    
+    results = raw_data.results
+    competitions = raw_data.competitions
 
+    results = _filter_on_event(results, event_id)
 
-def _filter_raw_dataframes(results, competitions, event_id):
-    # simulate SQL filtering and joining
+    results = _remove_invalid_results(results)
 
-    # filter on event
-    results = results[results['eventId'] == event_id.value]
-    results = results.drop('eventId', axis = 1)
+    results = _remove_persons_with_insufficient_results(results, 2)
 
-    # remove invalid results
-    results = results[results['best'] != -1]
+    results = _convert_results_to_seconds(results)
 
-    # remove persons with less than 2 results
-    results = _remove_insufficient_results(results, 2)
+    results = _join_results_on_competitions(results, competitions)
 
-    # convert results to seconds
-    # enven though floats take more memory than integers it won't matter
-    # because using NaN and interpolating data will make float columns anyway
-    results['best'] = results['best'] / 100
+    results = _sort_results(results)
 
-    # join results with competitions
-    results = _merge_results_and_competitions(results, competitions)
+    results = _convert_year_month_day_to_date(results)
 
     return results
 
 
-def _remove_insufficient_results(results, minimum_results_per_person):
+def _filter_on_event(results, event_id):
+    """
+    Filter on event and drop unneeded eventId column
+    """
+
+    results = results[results['eventId'] == event_id.value]
+    
+    return results.drop('eventId', axis = 1)
+
+
+def _remove_invalid_results(results):
+    return results[results['best'] != -1]
+
+
+def _convert_results_to_seconds(results):
+    # enven though floats take more memory than integers it won't matter
+    # because using NaN and interpolating data will make float columns anyway
+    results['best'] = results['best'] / 100
+
+    return results
+
+
+def _remove_persons_with_insufficient_results(results, minimum_results_per_person):
     # count each person's number of occurences
     persons_counts = results['personId'].value_counts()
 
@@ -60,19 +76,29 @@ def _remove_insufficient_results(results, minimum_results_per_person):
     return results
 
 
-def _merge_results_and_competitions(results, competitions):
-    # match competitions id name with the one from results
+def _join_results_on_competitions(results, competitions):
+    """
+    Join results on competition and drop unneeded competitionId column
+    """
+
+    # set identical column name on both dataframes
     competitions = competitions.rename(columns={'id': 'competitionId'})
 
     # equivalent of SQL INNER JOIN (we don't do LEFT OUTER JOIN as we need existing dates)
     results = pd.merge(results, competitions, on='competitionId')
-    results = results.drop('competitionId', axis = 1)
+    
+    return results.drop('competitionId', axis = 1)
 
-    # sort
-    results = results.sort_values(by = ['personId', 'YEAR', 'MONTH', 'DAY'])
 
-    # convert year, month, day columns to actual date
+def _sort_results(results):
+    return results.sort_values(by = ['personId', 'YEAR', 'MONTH', 'DAY'])
+
+
+def _convert_year_month_day_to_date(results):
+    """
+    Convert year, month and day to date and drop unneeded YEAR, MONTH, DAY columns
+    """
+
     results['date'] = pd.to_datetime(results[['YEAR', 'MONTH', 'DAY']])
-    results = results.drop(columns=['YEAR', 'MONTH', 'DAY'])
-
-    return results
+    
+    return results.drop(columns=['YEAR', 'MONTH', 'DAY'])
