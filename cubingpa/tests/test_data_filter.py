@@ -120,15 +120,6 @@ def test_remove_persons_with_insufficient_results_two_last():
     debug_print(df_before, df_after, df_expected)
     assert df_expected.equals(df_after)
 
-def test_remove_persons_with_insufficient_results_two_last():
-    df_before = pd.DataFrame({'personId': ['person1', 'person1', 'person2',
-        'person2', 'person3'], 'best': [50, 40, 50, 50, 40]}, index=[0,1,2,3,4])
-    df_expected = pd.DataFrame({'personId': ['person1', 'person1',
-        'person2', 'person2'], 'best': [50, 40, 50, 50]}, index=[0,1,2,3])
-    df_after = data_filter._remove_persons_with_insufficient_results(df_before, 2)
-    debug_print(df_before, df_after, df_expected)
-    assert df_expected.equals(df_after)
-
 def test_remove_persons_with_insufficient_results_two_multiple():
     df_before = pd.DataFrame({'personId': ['person1', 'person1', 'person2',
         'person3'], 'best': [50, 40, 50, 50]}, index=[0,1,2,3])

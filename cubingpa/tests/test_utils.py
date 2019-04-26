@@ -32,7 +32,7 @@ def test_remove_not_progressing_solves_superior_ending():
     df_after = utils.remove_not_progressing_solves(df_before)
     assert df_expected.equals(df_after)
 
-def test_remove_not_progressing_solves_equals_starting():
+def test_remove_not_progressing_solves_equals_ending():
     df_before = pd.DataFrame({'best': [50, 45, 40, 40]}, index=[0,1,2,3])
     df_expected = pd.DataFrame({'best': [50, 45, 40]}, index=[0,1,2])
     df_after = utils.remove_not_progressing_solves(df_before)
