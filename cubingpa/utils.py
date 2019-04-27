@@ -1,7 +1,10 @@
 import pandas as pd
+from pandas import DataFrame
+from datetime import datetime
+from typing import List, NamedTuple
 
 
-def remove_not_progressing_solves(dataframe, column_number=0):
+def remove_not_progressing_solves(dataframe: DataFrame, column_number: int = 0) -> DataFrame:
     """
     Considering a dataframe with a column containing solve results (usually sorted by ascending date),
     remove rows with solves not making progress over the previous solves
@@ -34,7 +37,7 @@ def remove_not_progressing_solves(dataframe, column_number=0):
     return dataframe.drop(rows_to_drop)
 
 
-def interpolate_dates(dataframe):
+def interpolate_dates(dataframe: DataFrame) -> DataFrame:
     """
     Considering a dataframe with dates as an index and numerical columns, sorted in ascending date order,
     build a 1-day frequency dataframe by interpolating missing data
@@ -58,7 +61,7 @@ def interpolate_dates(dataframe):
     return dataframe.reindex(full_index).interpolate()
 
 
-def convert_date_index_to_timedelta(dataframe):
+def convert_date_index_to_timedelta(dataframe: DataFrame) -> DataFrame:
     """
     Considering a dataframe with dates as an index, sorted in ascending date order, with a 1-day frequency,
     convert the date index to a timedelta index in days

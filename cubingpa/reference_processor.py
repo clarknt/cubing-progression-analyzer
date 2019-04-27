@@ -2,7 +2,10 @@ import math
 import time
 import numpy as np
 import pandas as pd
+from datetime import datetime
 from datetime import timedelta
+from typing import List, Tuple, Any, cast
+from pandas import DataFrame, Series
 
 from cubingpa import utils
 
@@ -28,7 +31,14 @@ class ReferenceProcessor:
         Results filtered on one event, sorted and cleaned by cubingpa.data_filter
     """
 
-    def __init__(self, filtered_results):
+    _reference_df = None # type: DataFrame
+    _reference_id = None # type: str
+    _reference_values = None # type: Series
+    _processed_results = None # type: DataFrame
+    _df_to_concat = None # type: List[DataFrame]
+
+
+    def __init__(self, filtered_results: DataFrame) -> None:
         self._persons_groups = filtered_results.groupby('personId')
 
         # further algorithms rely on the fact that dataframes are dealt with in descending max(time) order
@@ -42,15 +52,8 @@ class ReferenceProcessor:
         self._mintimes = self._persons_groups.min()
         self._mintimes = self._mintimes.reindex(self._maxtimes.index)
 
-        self._reference_df = None
-        self._reference_id = None
-        self._reference_values = None
 
-        self._processed_results = None
-        self._df_to_concat = None
-
-
-    def process(self, log_progression = False, log_debug = False):
+    def process(self, log_progression: bool = False, log_debug: bool = False) -> DataFrame:
         """
         Launch processing
 
@@ -74,7 +77,7 @@ class ReferenceProcessor:
         return self._processed_results
 
 
-    def _init_reference(self):
+    def _init_reference(self) -> None:
         
         reference_initialized = False
         
@@ -106,17 +109,17 @@ class ReferenceProcessor:
 
             reference_initialized = True
 
-    def _init_processed_results(self):
+    def _init_processed_results(self) -> None:
         self._processed_results = self._reference_df
         self._df_to_concat = [self._processed_results]
 
 
-    def _update_processed_results(self, new_processed_results):
+    def _update_processed_results(self, new_processed_results: DataFrame) -> None:
         self._processed_results = new_processed_results
         self._df_to_concat[0] = self._processed_results
 
 
-    def _launch_main_process(self, log_progression = False, log_debug = False):
+    def _launch_main_process(self, log_progression: bool = False, log_debug: bool = False) -> None:
         if log_progression:
             # prepare process progression indication
             total_loops = len(self._maxtimes[1:len(self._maxtimes)])
@@ -173,7 +176,7 @@ class ReferenceProcessor:
             print('Done')
 
 
-    def _create_person_dataframe(self, person_id):
+    def _create_person_dataframe(self, person_id: str) -> DataFrame:
         # create df
         person_df = self._persons_groups.get_group(person_id)
         person_df = person_df.rename(columns={'best': person_id})
@@ -182,22 +185,40 @@ class ReferenceProcessor:
         return person_df.set_index('date')
 
 
-    def _remove_duplicate_dates(self, person_dataframe):
+    def _remove_duplicate_dates(self, person_dataframe: DataFrame) -> DataFrame:
         # remove duplicate dates by keeping best solve
         return person_dataframe.groupby('date').aggregate(np.min)
 
 
-    def _set_reference_values(self, dataframe):
+    def _set_reference_values(self, dataframe: DataFrame) -> None:
         self._reference_values = dataframe[self._reference_id].dropna().sort_values()
 
 
-    def _find_date_for_value(self, dataframe, column_id, time):
+    def _find_date_for_value(self, dataframe: DataFrame, column_id: str, time: float) -> Any:
+        """
+        Find time in a dataframe column and return corresponding date
+        /!\ It is assumed time exists in the dataframe
+
+        Parameters
+        ----------
+        dataframe: DataFrame
+            DataFrame to look into
+        column_id: str
+            ID of the column to look into
+        time: float
+            Value to look for. /!\ It is assumed time exists in the dataframe
+
+        Returns
+        -------
+        datetime
+            Found date
+        """
         matching_rows = dataframe[dataframe[column_id] == time]
 
         return matching_rows.index[0]
 
 
-    def _get_date_for_new_time(self, dataframe, column_id, time):
+    def _get_date_for_new_time(self, dataframe: DataFrame, column_id: str, time: float) -> Tuple[datetime, float]:
         # use data from the group (i.e. more spaced data) for a more precise value
         person_df = self._create_person_dataframe(column_id)
         person_df = self._remove_duplicate_dates(person_df)
@@ -223,7 +244,7 @@ class ReferenceProcessor:
         return new_date, new_time
 
 
-    def _interpolate_column(self, dataframe, column_id, time):
+    def _interpolate_column(self, dataframe: DataFrame, column_id: str, time: float) -> DataFrame:
         person_df = pd.DataFrame(dataframe[column_id], index=dataframe.index)
         person_df = person_df.dropna()
 
@@ -246,11 +267,19 @@ class ReferenceProcessor:
         return dataframe
 
 
-    def _get_reference_min_time(self):
+    def _get_reference_min_time(self) -> Any:
+        """
+        Get lowest time in reference. Assumes reference is sorted by ascending times.
+
+        Returns
+        -------
+        float
+            min time
+        """
         return self._reference_values[0]
 
 
-    def _update_reference(self, time, log_debug = False):
+    def _update_reference(self, time: float, log_debug: bool = False) -> None:
         # test if current reference column still works for aligning current time
         # not safe using _mintimes_df: column might have been interpolated and differ
         if self._get_reference_min_time() <= time:
@@ -284,7 +313,7 @@ class ReferenceProcessor:
         # CASE 2: interpolation needed
         # no column goes low enough: disjointed data
         # find the column with the lowest time
-        min_id = None
+        min_id = self._reference_id  # give a default value to avoid mypy error (will be overriden in the loop anway)
         min_time = math.inf
 
         # left value is inclusive, right value is exclusive in left:right
@@ -307,8 +336,24 @@ class ReferenceProcessor:
         return
 
 
-    def _find_closest_date(self, time, log_debug = False):
-        
+    def _find_closest_date(self, time: float, log_debug: bool = False) -> Any:
+        """
+        Find date corresponding to the closest matching time within the reference.
+        Updates reference first to make sure closest date can be found.
+
+        Parameters
+        ----------
+        time: float
+            Time to look for
+        log_debug: bool, optional
+            Indicates if process progression debug information should be shown. Default: False
+
+        Returns
+        -------
+        datetime
+            Found date
+        """
+
         if self._maxtimes.loc[self._reference_id, 'best'] < time:
             raise ValueError("Time is above reference max time")
 
@@ -347,7 +392,7 @@ class ReferenceProcessor:
             return self._reference_values.index[index - 1]
 
 
-    def _shift_date(self, dataframe, delta):
+    def _shift_date(self, dataframe: DataFrame, delta: datetime) -> DataFrame:
         return dataframe.tshift(1, freq=delta)
 
 

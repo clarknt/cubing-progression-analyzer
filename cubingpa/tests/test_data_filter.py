@@ -1,16 +1,17 @@
 import pandas as pd
+from pandas import DataFrame
 from datetime import datetime
 
 from cubingpa import data_filter
 from cubingpa.events import EventId
 
 
-def debug_print(df_before, df_after, df_expected):
+def debug_print(df_before: DataFrame, df_after: DataFrame, df_expected: DataFrame) -> None:
     print(f"---------\ndf_before\n---------\n{df_before}\n{df_before.info()}\n")
     print(f"--------\ndf_after\n--------\n{df_after}\n{df_after.info()}\n")
     print(f"-----------\ndf_expected\n-----------\n{df_expected}\n{df_expected.info()}")
 
-def debug_print_results_competitions(df_results, df_competitions, df_after, df_expected):
+def debug_print_results_competitions(df_results: DataFrame, df_competitions: DataFrame, df_after: DataFrame, df_expected: DataFrame) -> None:
     print(f"---------\ndf_results\n---------\n{df_results}\n{df_results.info()}\n")
     print(f"---------------\ndf_competitions\n---------------\n{df_competitions}\n{df_competitions.info()}\n")
     print(f"--------\ndf_after\n--------\n{df_after}\n{df_after.info()}\n")
@@ -18,7 +19,7 @@ def debug_print_results_competitions(df_results, df_competitions, df_after, df_e
 
 
 
-def test_filter_on_event_existing():
+def test_filter_on_event_existing() -> None:
     df_before = pd.DataFrame({'eventId': [EventId.E_333.value, EventId.E_333_BF.value,
         EventId.E_333.value], 'personId': ['person1', 'person1', 'person2']}, index=[0,1,2])
     df_expected = pd.DataFrame({'personId': ['person1', 'person2']},
@@ -27,7 +28,7 @@ def test_filter_on_event_existing():
     debug_print(df_before, df_after, df_expected)
     assert df_expected.equals(df_after)
 
-def test_filter_on_event_no_removal():
+def test_filter_on_event_no_removal() -> None:
     df_before = pd.DataFrame({'eventId': [EventId.E_333.value, EventId.E_333.value,
         EventId.E_333.value], 'personId': ['person1', 'person1', 'person2']}, index=[0,1,2])
     df_expected = pd.DataFrame({'personId': ['person1', 'person1', 'person2']}, index=[0,1,2])
@@ -35,7 +36,7 @@ def test_filter_on_event_no_removal():
     debug_print(df_before, df_after, df_expected)
     assert df_expected.equals(df_after)
 
-def test_filter_on_event_remove_all():
+def test_filter_on_event_remove_all() -> None:
     df_before = pd.DataFrame({'eventId': [EventId.E_333.value, EventId.E_333_BF.value,
         EventId.E_333.value], 'personId': ['person1', 'person1', 'person2']}, index=[0,1,2])
     # create a row then drop it so that column type is identical to original one
@@ -48,7 +49,7 @@ def test_filter_on_event_remove_all():
 
 
 
-def test_remove_invalid_results_some_removal():
+def test_remove_invalid_results_some_removal() -> None:
     df_before = pd.DataFrame({'personId': ['person1', 'person1', 'person2',
         'person3'], 'best': [50, -1, 50, 40]}, index=[0,1,2,3])
     df_expected = pd.DataFrame({'personId': ['person1', 'person2',
@@ -57,7 +58,7 @@ def test_remove_invalid_results_some_removal():
     debug_print(df_before, df_after, df_expected)
     assert df_expected.equals(df_after)
 
-def test_remove_invalid_results_no_removal():
+def test_remove_invalid_results_no_removal() -> None:
     df_before = pd.DataFrame({'personId': ['person1', 'person2',
         'person3'], 'best': [50, 50, 40]}, index=[0,1,2])
     df_expected = df_before
@@ -65,7 +66,7 @@ def test_remove_invalid_results_no_removal():
     debug_print(df_before, df_after, df_expected)
     assert df_expected.equals(df_after)
 
-def test_remove_invalid_results_remove_all():
+def test_remove_invalid_results_remove_all() -> None:
     df_before = pd.DataFrame({'personId': ['person1', 'person2',
         'person3'], 'best': [-1, -1, -1]}, index=[0,1,2])
     # create a row then drop it so that column type is identical to original one
@@ -77,14 +78,14 @@ def test_remove_invalid_results_remove_all():
 
 
 
-def test_convert_results_to_seconds_some_results():
+def test_convert_results_to_seconds_some_results() -> None:
     df_before = pd.DataFrame({'best': [1020, 1238, 912, 1196, 1052]}, index=[0,1,2,3,4])
     df_expected = pd.DataFrame({'best': [10.20, 12.38, 9.12, 11.96, 10.52]}, index=[0,1,2,3,4])
     df_after = data_filter._convert_results_to_seconds(df_before)
     debug_print(df_before, df_after, df_expected)
     assert df_expected.equals(df_after)
 
-def test_convert_results_to_seconds_no_results():
+def test_convert_results_to_seconds_no_results() -> None:
     df_before = pd.DataFrame({'best': []}, index=[])
     df_expected = df_before
     df_after = data_filter._convert_results_to_seconds(df_before)
@@ -93,7 +94,7 @@ def test_convert_results_to_seconds_no_results():
 
 
 
-def test_remove_persons_with_insufficient_results_two_middle():
+def test_remove_persons_with_insufficient_results_two_middle() -> None:
     df_before = pd.DataFrame({'personId': ['person1', 'person1', 'person2',
         'person3', 'person3'], 'best': [50, 40, 50, 50, 40]}, index=[0,1,2,3,4])
     df_expected = pd.DataFrame({'personId': ['person1', 'person1',
@@ -102,7 +103,7 @@ def test_remove_persons_with_insufficient_results_two_middle():
     debug_print(df_before, df_after, df_expected)
     assert df_expected.equals(df_after)
 
-def test_remove_persons_with_insufficient_results_two_first():
+def test_remove_persons_with_insufficient_results_two_first() -> None:
     df_before = pd.DataFrame({'personId': ['person1', 'person2', 'person2',
         'person3', 'person3'], 'best': [50, 40, 50, 50, 40]}, index=[0,1,2,3,4])
     df_expected = pd.DataFrame({'personId': ['person2', 'person2',
@@ -111,7 +112,7 @@ def test_remove_persons_with_insufficient_results_two_first():
     debug_print(df_before, df_after, df_expected)
     assert df_expected.equals(df_after)
 
-def test_remove_persons_with_insufficient_results_two_last():
+def test_remove_persons_with_insufficient_results_two_last() -> None:
     df_before = pd.DataFrame({'personId': ['person1', 'person1', 'person2',
         'person2', 'person3'], 'best': [50, 40, 50, 50, 40]}, index=[0,1,2,3,4])
     df_expected = pd.DataFrame({'personId': ['person1', 'person1',
@@ -120,7 +121,7 @@ def test_remove_persons_with_insufficient_results_two_last():
     debug_print(df_before, df_after, df_expected)
     assert df_expected.equals(df_after)
 
-def test_remove_persons_with_insufficient_results_two_multiple():
+def test_remove_persons_with_insufficient_results_two_multiple() -> None:
     df_before = pd.DataFrame({'personId': ['person1', 'person1', 'person2',
         'person3'], 'best': [50, 40, 50, 50]}, index=[0,1,2,3])
     df_expected = pd.DataFrame({'personId': ['person1', 'person1'],
@@ -129,7 +130,7 @@ def test_remove_persons_with_insufficient_results_two_multiple():
     debug_print(df_before, df_after, df_expected)
     assert df_expected.equals(df_after)
 
-def test_remove_persons_with_insufficient_results_two_all():
+def test_remove_persons_with_insufficient_results_two_all() -> None:
     df_before = pd.DataFrame({'personId': ['person1', 'person2',
         'person3'], 'best': [50, 40, 50]}, index=[0,1,2])
     # create a row then drop it so that column type is identical to original one
@@ -139,7 +140,7 @@ def test_remove_persons_with_insufficient_results_two_all():
     debug_print(df_before, df_after, df_expected)
     assert df_expected.equals(df_after)
 
-def test_remove_persons_with_insufficient_results_two_none():
+def test_remove_persons_with_insufficient_results_two_none() -> None:
     df_before = pd.DataFrame({'personId': ['person1', 'person1', 'person2', 'person2',
         'person3', 'person3'], 'best': [50, 40, 50, 40, 50, 40]}, index=[0,1,2,3,4,5])
     df_expected = df_before
@@ -147,7 +148,7 @@ def test_remove_persons_with_insufficient_results_two_none():
     debug_print(df_before, df_after, df_expected)
     assert df_expected.equals(df_after)
 
-def test_remove_persons_with_insufficient_results_one_none():
+def test_remove_persons_with_insufficient_results_one_none() -> None:
     df_before = pd.DataFrame({'personId': ['person1', 'person1', 'person2',
         'person3', 'person3'], 'best': [50, 40, 50, 50, 40]}, index=[0,1,2,3,4])
     df_expected = df_before
@@ -155,7 +156,7 @@ def test_remove_persons_with_insufficient_results_one_none():
     debug_print(df_before, df_after, df_expected)
     assert df_expected.equals(df_after)
 
-def test_remove_persons_with_insufficient_results_zero_none():
+def test_remove_persons_with_insufficient_results_zero_none() -> None:
     df_before = pd.DataFrame({'personId': ['person1', 'person1', 'person2',
         'person3', 'person3'], 'best': [50, 40, 50, 50, 40]}, index=[0,1,2,3,4])
     df_expected = df_before
@@ -163,7 +164,7 @@ def test_remove_persons_with_insufficient_results_zero_none():
     debug_print(df_before, df_after, df_expected)
     assert df_expected.equals(df_after)
 
-def test_remove_persons_with_insufficient_results_minus_one_none():
+def test_remove_persons_with_insufficient_results_minus_one_none() -> None:
     df_before = pd.DataFrame({'personId': ['person1', 'person1', 'person2',
         'person3', 'person3'], 'best': [50, 40, 50, 50, 40]}, index=[0,1,2,3,4])
     df_expected = df_before
@@ -171,7 +172,7 @@ def test_remove_persons_with_insufficient_results_minus_one_none():
     debug_print(df_before, df_after, df_expected)
     assert df_expected.equals(df_after)
 
-def test_remove_persons_with_insufficient_results_three_middle():
+def test_remove_persons_with_insufficient_results_three_middle() -> None:
     df_before = pd.DataFrame({'personId': ['person1', 'person1', 'person1', 'person2',
         'person3', 'person3', 'person3'],
         'best': [50, 40, 50, 50, 40, 30, 20]}, index=[0,1,2,3,4,5,6])
@@ -184,7 +185,7 @@ def test_remove_persons_with_insufficient_results_three_middle():
 
 
 
-def test_join_results_on_competitions_nominal():
+def test_join_results_on_competitions_nominal() -> None:
     df_results = pd.DataFrame({'personId': ['person1', 'person2',
         'person3'], 'eventId': ['333', '333', '333'],
         'best': [15, 20, 7], 'competitionId': [1, 1, 2]}, index=[0,1,2])
@@ -198,7 +199,7 @@ def test_join_results_on_competitions_nominal():
     debug_print_results_competitions(df_results, df_competitions, df_after, df_expected)
     assert df_expected.equals(df_after)
 
-def test_join_results_on_competitions_no_competition():
+def test_join_results_on_competitions_no_competition() -> None:
     df_results = pd.DataFrame({'personId': ['person1', 'person2', 'person3'],
         'best': [15, 20, 7], 'competitionId': [1, 1, 2]}, index=[0,1,2])
     # create a row then drop it so that column type is identical to expected one
@@ -215,7 +216,7 @@ def test_join_results_on_competitions_no_competition():
 
 
 
-def test_sort_results_nominal():
+def test_sort_results_nominal() -> None:
     df_before = pd.DataFrame({'personId': ['person2', 'person1', 'person1', 'person1', 
         'person3', 'person3', 'person3'], 'best': [50, 50, 40, 50, 40, 30, 20],
         'YEAR': [2018, 2014, 2015, 2015, 2016, 2017, 2017], 'MONTH': [5, 1, 8, 3, 4, 8, 7],
@@ -230,7 +231,7 @@ def test_sort_results_nominal():
 
 
 
-def test_convert_year_month_day_to_date_nominal():
+def test_convert_year_month_day_to_date_nominal() -> None:
     df_before = pd.DataFrame({'personId': ['person1', 'person1', 'person1', 'person2',
         'person3', 'person3', 'person3'], 'best': [50, 50, 40, 50, 40, 20, 30],
         'YEAR': [2014, 2015, 2015, 2018, 2016, 2017, 2017], 'MONTH': [1, 3, 8, 5, 4, 7, 8],

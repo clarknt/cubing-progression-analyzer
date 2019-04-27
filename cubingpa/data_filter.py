@@ -1,10 +1,12 @@
 import pandas as pd
+from pandas import DataFrame
 from sqlalchemy import create_engine
 
+from cubingpa.raw_data import RawData
 from cubingpa.events import EventId
 
 
-def filter(raw_data, event_id):
+def filter(raw_data: RawData, event_id: EventId) -> DataFrame:
     """
     Filter, merge and organize raw data, retaining specified event only
 
@@ -41,7 +43,7 @@ def filter(raw_data, event_id):
     return results
 
 
-def _filter_on_event(results, event_id):
+def _filter_on_event(results: DataFrame, event_id: EventId) -> DataFrame:
     """
     Filter on event and drop unneeded eventId column
     """
@@ -51,11 +53,11 @@ def _filter_on_event(results, event_id):
     return results.drop('eventId', axis = 1)
 
 
-def _remove_invalid_results(results):
+def _remove_invalid_results(results: DataFrame) -> DataFrame:
     return results[results['best'] != -1]
 
 
-def _convert_results_to_seconds(results):
+def _convert_results_to_seconds(results: DataFrame) -> DataFrame:
     # enven though floats take more memory than integers it won't matter
     # because using NaN and interpolating data will make float columns anyway
     results['best'] = results['best'] / 100
@@ -63,7 +65,7 @@ def _convert_results_to_seconds(results):
     return results
 
 
-def _remove_persons_with_insufficient_results(results, minimum_results_per_person):
+def _remove_persons_with_insufficient_results(results: DataFrame, minimum_results_per_person: int) -> DataFrame:
     # count each person's number of occurences
     persons_counts = results['personId'].value_counts()
 
@@ -76,7 +78,7 @@ def _remove_persons_with_insufficient_results(results, minimum_results_per_perso
     return results
 
 
-def _join_results_on_competitions(results, competitions):
+def _join_results_on_competitions(results: DataFrame, competitions: DataFrame) -> DataFrame:
     """
     Join results on competition and drop unneeded competitionId column
     """
@@ -90,11 +92,11 @@ def _join_results_on_competitions(results, competitions):
     return results.drop('competitionId', axis = 1)
 
 
-def _sort_results(results):
+def _sort_results(results: DataFrame) -> DataFrame:
     return results.sort_values(by = ['personId', 'YEAR', 'MONTH', 'DAY'])
 
 
-def _convert_year_month_day_to_date(results):
+def _convert_year_month_day_to_date(results: DataFrame) -> DataFrame:
     """
     Convert year, month and day to date and drop unneeded YEAR, MONTH, DAY columns
     """
