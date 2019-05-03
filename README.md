@@ -10,6 +10,14 @@ mypy --config-file=mypy.ini --strict cubingpa
 
 ## Run tests
 
+### Regular
+
 ```sh
 pytest cubingpa
+```
+
+### With coverage
+
+```sh
+pytest --cov=cubingpa cubingpa
 ```

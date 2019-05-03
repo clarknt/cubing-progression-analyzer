@@ -3,4 +3,5 @@ pandas
 matplotlib
 SQLAlchemy
 pytest
+pytest-cov
 mypy
